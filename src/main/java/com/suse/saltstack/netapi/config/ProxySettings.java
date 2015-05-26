@@ -2,15 +2,29 @@ package com.suse.saltstack.netapi.config;
 
 import com.suse.saltstack.netapi.client.SaltStackClient;
 
+import java.util.*;
+
 /**
  * Class representing proxy settings to be used with {@link SaltStackClient}.
  */
 public class ProxySettings {
+    public static class Credentials {
+
+        private String username;
+        private String password;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
 
     private String hostname;
-    private String username;
-    private String password;
     private int port;
+    private Optional<Credentials> credentials;
 
     /**
      * Basic constructor taking proxy hostname and port.
@@ -19,8 +33,7 @@ public class ProxySettings {
      * @param port proxy port
      */
     public ProxySettings(String hostname, int port) {
-        this.hostname = hostname;
-        this.port = port;
+        this(hostname, port, Optional.empty());
     }
 
     /**
@@ -28,14 +41,12 @@ public class ProxySettings {
      *
      * @param hostname proxy hostname
      * @param port proxy port
-     * @param username proxy username
-     * @param password proxy password
+     * @param credentials proxy credentials
      */
-    public ProxySettings(String hostname, int port,
-            String username, String password) {
-        this(hostname, port);
-        this.username = username;
-        this.password = password;
+    public ProxySettings(String hostname, int port, Optional<Credentials> credentials) {
+        this.hostname = hostname;
+        this.port = port;
+        this.credentials = credentials;
     }
 
     /**
@@ -46,13 +57,6 @@ public class ProxySettings {
     }
 
     /**
-     * @param hostname the hostname to set
-     */
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
-    }
-
-    /**
      * @return the proxy port
      */
     public int getPort() {
@@ -60,37 +64,9 @@ public class ProxySettings {
     }
 
     /**
-     * @param port the port to set
+     * @return the proxy credentials
      */
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    /**
-     * @return the username
-     */
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * @param username the username to set
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /**
-     * @return the password
-     */
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * @param password the password to set
-     */
-    public void setPassword(String password) {
-        this.password = password;
+    public Optional<Credentials> getCredentials() {
+        return credentials;
     }
 }

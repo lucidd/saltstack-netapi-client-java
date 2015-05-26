@@ -44,7 +44,7 @@ public class RequestFactory {
     public HttpURLConnection initConnection(String method, String endpoint,
             ClientConfig config) throws IOException {
         // Init the connection
-        URL url = config.get(ClientConfig.URL).resolve(endpoint).toURL();
+        URL url = config.get(ClientConfig.URL).get().resolve(endpoint).toURL();
         HttpURLConnection connection;
 
         // Optionally connect via a given proxy

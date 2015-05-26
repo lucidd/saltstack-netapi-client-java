@@ -39,7 +39,7 @@ import java.util.Map;
  *
  * @param <T> The result type this parser produces.
  */
-public class JsonParser<T> {
+public class JsonParser<T> implements Parser<T>{
 
     public static final JsonParser<Result<String>> STRING =
             new JsonParser<>(new TypeToken<Result<String>>(){});

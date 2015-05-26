@@ -1,8 +1,8 @@
 package com.suse.saltstack.netapi.config;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.*;
 
 /**
  * A statically typed key/value store for the Saltstack client configuration.
@@ -29,10 +29,7 @@ public class ClientConfig {
     public static final Key<Integer> SOCKET_TIMEOUT = new Key<>(10000);
 
     // Proxy settings
-    public static final Key<String> PROXY_HOSTNAME = new Key<>();
-    public static final Key<Integer> PROXY_PORT = new Key<>(3128);
-    public static final Key<String> PROXY_USERNAME = new Key<>();
-    public static final Key<String> PROXY_PASSWORD = new Key<>();
+    public static final Key<ProxySettings> PROXY_SETTINGS = new Key<>();
 
     /**
      * A key to use with {@link ClientConfig}.
@@ -41,13 +38,13 @@ public class ClientConfig {
     static class Key<T> {
 
         /** The default value of this key */
-        public final T defaultValue;
+        public final Optional<T> defaultValue;
 
         /**
-         * Creates a new Key with the default value null.
+         * Creates a new Key with no default value.
          */
         public Key() {
-            this(null);
+            this(Optional.empty());
         }
 
         /**
@@ -56,6 +53,10 @@ public class ClientConfig {
          * @param defaultValue Default value for this key.
          */
         public Key(T defaultValue) {
+            this(Optional.ofNullable(defaultValue));
+        }
+
+        public Key(Optional<T> defaultValue) {
             this.defaultValue = defaultValue;
         }
 
@@ -99,8 +100,12 @@ public class ClientConfig {
      * configured.
      */
     @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> key) {
+    public <T> Optional<T> get(Key<T> key) {
         Object value = store.get(key);
-        return value != null ? (T) value : key.defaultValue;
+        return value != null ? Optional.of((T)value) : key.defaultValue;
+    }
+
+    public <T> void pipe(Key<T> key, Consumer<T> consumer) {
+        get(key).ifPresent(consumer);
     }
 }

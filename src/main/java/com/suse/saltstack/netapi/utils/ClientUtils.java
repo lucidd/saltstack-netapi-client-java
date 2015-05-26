@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.*;
+import java.util.function.*;
 
 /**
  * Utilities for {@link SaltStackClient}.

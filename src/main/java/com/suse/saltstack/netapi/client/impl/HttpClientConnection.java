@@ -1,7 +1,7 @@
 package com.suse.saltstack.netapi.client.impl;
 
 import com.suse.saltstack.netapi.client.Connection;
-import com.suse.saltstack.netapi.config.ClientConfig;
+import com.suse.saltstack.netapi.config.*;
 import com.suse.saltstack.netapi.exception.SaltStackException;
 import com.suse.saltstack.netapi.exception.SaltUserUnauthorizedException;
 import com.suse.saltstack.netapi.parser.JsonParser;
@@ -76,7 +76,7 @@ public class HttpClientConnection<T> implements Connection<T> {
     /**
      * Perform HTTP request and parse the result into a given result type.
      *
-     * @param data the data to send with the request
+     * @param data the data to request with the request
      * @return object of type T
      * @throws SaltStackException in case of a problem when executing the request
      */
@@ -106,12 +106,10 @@ public class HttpClientConnection<T> implements Connection<T> {
      */
     private void configureTimeouts(HttpClientBuilder httpClientBuilder) {
         // Timeouts may be specified on configuration
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(config.get(ClientConfig.CONNECT_TIMEOUT))
-                .setSocketTimeout(config.get(ClientConfig.SOCKET_TIMEOUT))
-                .build();
-
-        httpClientBuilder.setDefaultRequestConfig(requestConfig);
+        RequestConfig.Builder builder = RequestConfig.custom();
+        config.pipe(ClientConfig.CONNECT_TIMEOUT, builder::setConnectTimeout);
+        config.pipe(ClientConfig.SOCKET_TIMEOUT, builder::setSocketTimeout);
+        httpClientBuilder.setDefaultRequestConfig(builder.build());
     }
 
     /**
@@ -121,25 +119,16 @@ public class HttpClientConnection<T> implements Connection<T> {
      * @param httpClientBuilder the {@link HttpClientBuilder} to be configured
      */
     private void configureProxyIfSpecified(HttpClientBuilder httpClientBuilder) {
-        String proxyHost = config.get(ClientConfig.PROXY_HOSTNAME);
-        if (proxyHost != null) {
-            int proxyPort = config.get(ClientConfig.PROXY_PORT);
-
-            HttpHost proxy = new HttpHost(proxyHost, proxyPort);
-            httpClientBuilder.setProxy(proxy);
-
-            String proxyUsername = config.get(ClientConfig.PROXY_USERNAME);
-            String proxyPassword = config.get(ClientConfig.PROXY_PASSWORD);
-
-            // Proxy authentication
-            if (proxyUsername != null && proxyPassword != null) {
-                CredentialsProvider credentials = new BasicCredentialsProvider();
-                credentials.setCredentials(
-                        new AuthScope(proxyHost, proxyPort),
-                        new UsernamePasswordCredentials(proxyUsername, proxyPassword));
-                httpClientBuilder.setDefaultCredentialsProvider(credentials);
-            }
-        }
+        config.get(ClientConfig.PROXY_SETTINGS).ifPresent((settings) -> {
+            httpClientBuilder.setProxy(new HttpHost(settings.getHostname(), settings.getPort()));
+            settings.getCredentials().ifPresent((credentials) -> {
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(
+                        new AuthScope(settings.getHostname(), settings.getPort()),
+                        new UsernamePasswordCredentials(credentials.getUsername(), credentials.getPassword()));
+                httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+            });
+        });
     }
 
     /**
@@ -152,7 +141,7 @@ public class HttpClientConnection<T> implements Connection<T> {
      */
     private HttpUriRequest prepareRequest(String jsonData)
             throws UnsupportedEncodingException {
-        URI uri = config.get(ClientConfig.URL).resolve(endpoint);
+        URI uri = config.get(ClientConfig.URL).get().resolve(endpoint);
         HttpUriRequest httpRequest;
         if (jsonData != null) {
             // POST data
@@ -167,10 +156,9 @@ public class HttpClientConnection<T> implements Connection<T> {
         httpRequest.addHeader(HttpHeaders.ACCEPT, "application/json");
 
         // Token authentication
-        String token = config.get(ClientConfig.TOKEN);
-        if (token != null) {
+        config.get(ClientConfig.TOKEN).ifPresent((token) -> {
             httpRequest.addHeader("X-Auth-Token", token);
-        }
+        });
 
         return httpRequest;
     }

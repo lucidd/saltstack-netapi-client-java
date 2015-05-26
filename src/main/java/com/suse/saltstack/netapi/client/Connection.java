@@ -21,7 +21,7 @@ public interface Connection<T> {
     /**
      * Send a POST request and parse the result into object of given {@link Type}.
      *
-     * @param data the data to send (in JSON format)
+     * @param data the data to request (in JSON format)
      * @return object of type given by resultType
      * @throws SaltStackException if the request was not successful
      */

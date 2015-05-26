@@ -92,24 +92,6 @@ public class SaltStackClient {
     }
 
     /**
-     * Configure to use a proxy when connecting to the SaltStack API.
-     *
-     * @param settings the proxy settings
-     */
-    public void setProxy(ProxySettings settings) {
-        if (settings.getHostname() != null) {
-            config.put(ClientConfig.PROXY_HOSTNAME, settings.getHostname());
-            config.put(ClientConfig.PROXY_PORT, settings.getPort());
-        }
-        if (settings.getUsername() != null) {
-            config.put(ClientConfig.PROXY_USERNAME, settings.getUsername());
-            if (settings.getPassword() != null) {
-                config.put(ClientConfig.PROXY_PASSWORD, settings.getPassword());
-            }
-        }
-    }
-
-    /**
      * Perform login and return the token.
      * <p>
      * {@code POST /login}
@@ -269,7 +251,7 @@ public class SaltStackClient {
         JsonArray jsonArray = new JsonArray();
         jsonArray.add(ClientUtils.makeJsonData(props, kwargs, args));
 
-        // Connect to the minions endpoint and send the above lowstate data
+        // Connect to the minions endpoint and request the above lowstate data
         Result<List<ScheduledJob>> result = connectionFactory
                 .create("/minions", JsonParser.SCHEDULED_JOB,  config)
                 .getResult(jsonArray.toString());
