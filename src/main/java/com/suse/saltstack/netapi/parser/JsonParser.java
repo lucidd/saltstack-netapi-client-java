@@ -12,11 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import com.suse.saltstack.netapi.datatypes.Arguments;
-import com.suse.saltstack.netapi.datatypes.Job;
-import com.suse.saltstack.netapi.datatypes.Keys;
-import com.suse.saltstack.netapi.datatypes.ScheduledJob;
-import com.suse.saltstack.netapi.datatypes.Token;
+import com.suse.saltstack.netapi.datatypes.*;
 import com.suse.saltstack.netapi.datatypes.cherrypy.Applications;
 import com.suse.saltstack.netapi.datatypes.cherrypy.HttpServer;
 import com.suse.saltstack.netapi.datatypes.cherrypy.Stats;
@@ -60,6 +56,8 @@ public class JsonParser<T> {
             new JsonParser<>(new TypeToken<Result<Keys>>(){});
     public static final JsonParser<Map<String, Object>> MAP =
             new JsonParser<>(new TypeToken<Map<String, Object>>(){});
+    public static final JsonParser<Event> EVENT =
+            new JsonParser<>(new TypeToken<Event>(){});
 
     private final TypeToken<T> type;
     private final Gson gson;
