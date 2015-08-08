@@ -71,46 +71,4 @@ public class ClientUtilsTest {
         assertEquals("Result doesn't match test string", result, TEST_STRING);
     }
 
-    @Test
-    public void makeJsonDataEmpty() {
-        JsonObject jsonObject = ClientUtils.makeJsonData(null, null, null);
-        assertEquals(new JsonObject(), jsonObject);
-    }
-
-    @Test
-    public void makeJsonDataKwargsArgs() {
-        JsonObject expected = new JsonObject();
-        expected.addProperty("tgt", "*");
-        expected.addProperty("fun", "test.ping");
-        JsonObject kwarg = new JsonObject();
-        kwarg.addProperty("first", "1");
-        kwarg.addProperty("snd", "42");
-        expected.add("kwarg", kwarg);
-        JsonArray arg = new JsonArray();
-        arg.add(new JsonPrimitive("foo"));
-        arg.add(new JsonPrimitive("bar"));
-        expected.add("arg", arg);
-
-        Map<String, Object> props = new LinkedHashMap<String, Object>() {
-            {
-                put("tgt", "*");
-                put("fun", "test.ping");
-            }
-        };
-
-        Map<String, String> kwargs = new LinkedHashMap<String, String>() {
-            {
-                put("first", "1");
-                put("snd", "42");
-            }
-        };
-
-        List<String> args = new ArrayList<>();
-        args.add("foo");
-        args.add("bar");
-
-        JsonObject jsonObject = ClientUtils.makeJsonData(props, kwargs, args);
-
-        assertEquals(expected, jsonObject);
-    }
 }
