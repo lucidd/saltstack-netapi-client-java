@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Representation of a scheduled job (not finished yet).
  */
-public class ScheduledJob {
+public class ScheduledJob<R> {
 
     private String jid;
     private List<String> minions;
