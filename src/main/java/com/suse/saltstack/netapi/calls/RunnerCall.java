@@ -27,9 +27,7 @@ public class RunnerCall<R> implements Call<R> {
     public Map<String, Object> payload() {
         HashMap<String, Object> payload = new HashMap<>();
         payload.put("fun", functionName);
-        kwargs.ifPresent( kwargs -> {
-            payload.put("kwargs", kwargs);
-        });
+        kwargs.ifPresent(payload::putAll);
         return payload;
     }
 

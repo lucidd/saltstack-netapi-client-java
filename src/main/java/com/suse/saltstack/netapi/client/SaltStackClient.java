@@ -3,7 +3,6 @@ package com.suse.saltstack.netapi.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.suse.saltstack.netapi.AuthModule;
 import com.suse.saltstack.netapi.calls.*;
@@ -21,8 +20,6 @@ import com.suse.saltstack.netapi.exception.SaltStackException;
 import com.suse.saltstack.netapi.parser.JsonParser;
 import com.suse.saltstack.netapi.results.Result;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
@@ -415,6 +412,7 @@ public class SaltStackClient {
         props.putAll(call.payload());
         props.put("client", Client.LOCAL_ASYNC.getValue());
         props.put("tgt", target.getTarget());
+        props.put("expr_form", target.getType());
 
         List<Map<String, Object>> list =  Collections.singletonList(props);
 
@@ -430,83 +428,44 @@ public class SaltStackClient {
         }.getType());
     }
 
-
-
     public <R> R callSync(final LocalCall<R> call, Target<?> target)
             throws SaltStackException {
         Map<String, Object> props = new HashMap<>();
-        props.putAll(call.payload());
-        props.put("client", Client.LOCAL.getValue());
         props.put("tgt", target.getTarget());
-
-        List<Map<String, Object>> list =  Collections.singletonList(props);
-
-        String payload = gson.toJson(list);
-
-        System.out.println("Payload: " + payload);
-
-        Result<List<JsonElement>> result = connectionFactory
-                .create("/", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
-                .getResult(payload);
-
-        return gson.fromJson(result.getResult().get(0), call.getReturnType().getType());
+        props.put("expr_form", target.getType());
+        Result<List<JsonElement>> wrapper = call(call, Client.LOCAL, "/", props, new TypeToken<Result<List<JsonElement>>>(){});
+        return gson.fromJson(wrapper.getResult().get(0), call.getReturnType().getType());
     }
 
     public <R> R callSync(final LocalCall<R> call, Target<?> target, String username, String password, AuthModule authModule)
             throws SaltStackException {
         Map<String, Object> props = new HashMap<>();
         props.putAll(call.payload());
-        props.put("client", Client.LOCAL.getValue());
-        props.put("tgt", target.getTarget());
         props.put("username", username);
         props.put("password", password);
         props.put("eauth", authModule.getValue());
-
-        List<Map<String, Object>> list =  Collections.singletonList(props);
-
-        String payload = gson.toJson(list);
-
-        System.out.println("Payload: " + payload);
-
-        Result<List<JsonElement>> result = connectionFactory
-                .create("/run", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
-                .getResult(payload);
-
-        return gson.fromJson(result.getResult().get(0), call.getReturnType().getType());
-    }
-
-    public <R> R callSync(final WheelCall<R> call)
-            throws SaltStackException {
-        Map<String, Object> props = new HashMap<>();
-        props.putAll(call.payload());
-        props.put("client", Client.WHEEL.getValue());
-
-        List<Map<String, Object>> list =  Collections.singletonList(props);
-
-        String payload = gson.toJson(list);
-
-        System.out.println("Payload: " + payload);
-
-        Result<List<WheelResult<JsonElement>>> wrapper = connectionFactory
-                .create("/", new JsonParser<>(new TypeToken<Result<List<WheelResult<JsonElement>>>>(){}), config)
-                .getResult(payload);
-
-        JsonElement inner = wrapper.getResult().get(0).getData().getResult();
-
+        props.put("tgt", target.getTarget());
+        props.put("expr_form", target.getType());
+        Result<List<JsonElement>> wrapper = call(call, Client.LOCAL, "/run", props,
+                new TypeToken<Result<List<JsonElement>>>() {});
+        JsonElement inner = wrapper.getResult().get(0);
         return gson.fromJson(inner, call.getReturnType().getType());
     }
 
+    public <R> R callSync(final WheelCall<R> call) throws SaltStackException {
+        Result<List<WheelResult<JsonElement>>> wrapper = call(call, Client.WHEEL, "/", null, new TypeToken<Result<List<WheelResult<JsonElement>>>>(){});
+        return gson.fromJson(wrapper.getResult().get(0).getData().getResult(), call.getReturnType().getType());
+    }
 
-    public <R> R callSync(final WheelCall<R> call, String username, String password, AuthModule authModule)
-            throws SaltStackException {
+
+    private <R> R callSync(Call<?> call, Client client, String username, String password, AuthModule authModule, TypeToken<R> type)
+             throws SaltStackException {
         Map<String, Object> props = new HashMap<>();
         props.putAll(call.payload());
-        props.put("client", Client.WHEEL.getValue());
+        props.put("client", client.getValue());
         props.put("username", username);
         props.put("password", password);
         props.put("eauth", authModule.getValue());
-
-
 
         List<Map<String, Object>> list =  Collections.singletonList(props);
 
@@ -515,60 +474,68 @@ public class SaltStackClient {
         System.out.println("Payload: " + payload);
 
 
-        Result<List<WheelResult<JsonElement>>> wrapper = connectionFactory
-                .create("/run", new JsonParser<>(new TypeToken<Result<List<WheelResult<JsonElement>>>>(){}), config)
+        return connectionFactory
+                .create("/run", new JsonParser<>(type), config)
                 .getResult(payload);
+    }
 
+    private <R> R callSync(final RunnerCall<R> call, Client client, TypeToken<R> type)
+            throws SaltStackException {
+        Map<String, Object> props = new HashMap<>();
+        props.putAll(call.payload());
+        props.put("client", client);
+
+        List<Map<String, Object>> list =  Collections.singletonList(props);
+
+        String payload = gson.toJson(list);
+
+        System.out.println("Payload: " + payload);
+
+        return connectionFactory
+                .create("/", new JsonParser<>(type), config)
+                .getResult(payload);
+    }
+
+    private <R> R call(Call<?> call, Client client, String endpoint, Map<String, Object> custom, TypeToken<R> type)
+            throws SaltStackException {
+        Map<String, Object> props = new HashMap<>();
+        props.putAll(call.payload());
+        props.put("client", client.getValue());
+        if(custom != null) {
+            props.putAll(custom);
+        }
+
+        List<Map<String, Object>> list =  Collections.singletonList(props);
+
+        String payload = gson.toJson(list);
+
+        System.out.println("Payload: " + payload);
+
+        return connectionFactory
+                .create(endpoint, new JsonParser<>(type), config)
+                .getResult(payload);
+    }
+
+    public <R> R callSync(WheelCall<R> call, String username, String password, AuthModule authModule)
+            throws SaltStackException {
+        Result<List<WheelResult<JsonElement>>> wrapper = callSync(call, Client.WHEEL, username, password, authModule,
+                new TypeToken<Result<List<WheelResult<JsonElement>>>>() {
+                });
         JsonElement inner = wrapper.getResult().get(0).getData().getResult();
-
         return gson.fromJson(inner, call.getReturnType().getType());
     }
 
     public <R> R callSync(final RunnerCall<R> call, String username, String password, AuthModule authModule)
             throws SaltStackException {
-        Map<String, Object> props = new HashMap<>();
-        props.putAll(call.payload());
-        props.put("client", Client.RUNNER.getValue());
-        props.put("username", username);
-        props.put("password", password);
-        props.put("eauth", authModule.getValue());
-
-
-
-        List<Map<String, Object>> list =  Collections.singletonList(props);
-
-        String payload = gson.toJson(list);
-
-        System.out.println("Payload: " + payload);
-
-
-        Result<List<JsonElement>> wrapper = connectionFactory
-                .create("/run", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
-                .getResult(payload);
-
-
+        Result<List<JsonElement>> wrapper = callSync(call, Client.RUNNER, username, password, authModule,
+                new TypeToken<Result<List<JsonElement>>>(){});
         JsonElement inner = wrapper.getResult().get(0);
-
         return gson.fromJson(inner, call.getReturnType().getType());
     }
 
     public <R> R callSync(final RunnerCall<R> call)
             throws SaltStackException {
-        Map<String, Object> props = new HashMap<>();
-        props.putAll(call.payload());
-        props.put("client", Client.RUNNER.getValue());
-
-        List<Map<String, Object>> list =  Collections.singletonList(props);
-
-        String payload = gson.toJson(list);
-
-        System.out.println("Payload: " + payload);
-
-        Result<List<JsonElement>> wrapper = connectionFactory
-                .create("/", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
-                .getResult(payload);
-
-
+        Result<List<JsonElement>> wrapper = call(call, Client.RUNNER, "/", null, new TypeToken<Result<List<JsonElement>>>(){});
         return gson.fromJson(wrapper.getResult().get(0), call.getReturnType().getType());
     }
 
@@ -589,9 +556,9 @@ public class SaltStackClient {
                 .create("/", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
                 .getResult(payload);
 
-        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>(){}.getType());
+        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
+        }.getType());
     }
-
 
     public <R> WheelAsyncResult<R> callAsync(final WheelCall<R> call)
             throws SaltStackException {
@@ -609,7 +576,8 @@ public class SaltStackClient {
                 .create("/", new JsonParser<>(new TypeToken<Result<List<JsonElement>>>(){}), config)
                 .getResult(payload);
 
-        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>(){}.getType());
+        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
+        }.getType());
     }
 
 

@@ -44,4 +44,10 @@ public class Pkg {
         return new LocalCall<>("pkg.file_dict", Optional.of(Arrays.asList(packages)), Optional.empty(), new TypeToken<Map<String, PackageDict>>(){});
     }
 
+    public static LocalCall<Map<String, Map<String,List<String>>>> listPkgs() {
+        LinkedHashMap<String, Object> args = new LinkedHashMap<>();
+        args.put("versions_as_list", true);
+        return new LocalCall<>("pkg.list_pkgs", Optional.empty(), Optional.of(args), new TypeToken<Map<String, Map<String, List<String>>>>(){});
+    }
+
 }

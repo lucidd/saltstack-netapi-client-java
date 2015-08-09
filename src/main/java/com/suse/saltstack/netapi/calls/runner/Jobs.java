@@ -1,7 +1,7 @@
 package com.suse.saltstack.netapi.calls.runner;
 
 import com.google.gson.reflect.TypeToken;
-import com.suse.saltstack.netapi.calls.RunnerCall;
+import com.suse.saltstack.netapi.calls.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,7 +11,6 @@ public class Jobs {
 
    private Jobs(){
    }
-
 
    public static RunnerCall<Map<String, Object>> listJob(String jid) {
       LinkedHashMap<String, Object> args = new LinkedHashMap<>();
