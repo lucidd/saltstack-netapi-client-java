@@ -27,6 +27,7 @@ import com.suse.saltstack.netapi.exception.SaltStackException;
 import com.suse.saltstack.netapi.parser.JsonParser;
 import com.suse.saltstack.netapi.results.Result;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
@@ -413,14 +414,15 @@ public class SaltStackClient {
         return result.getResult().get(0);
     }
 
-    public <R> R callSync(final LocalCall<R> call, Target<?> target)
+    public <R> Map<String, R> callSync(final LocalCall<R> call, Target<?> target)
             throws SaltStackException {
         Map<String, Object> props = new HashMap<>();
         props.put("tgt", target.getTarget());
         props.put("expr_form", target.getType());
         Result<List<JsonElement>> wrapper = call(call, Client.LOCAL, "/", props,
                 new TypeToken<Result<List<JsonElement>>>(){});
-        return gson.fromJson(wrapper.getResult().get(0), call.getReturnType().getType());
+        Type type = com.google.gson.internal.$Gson$Types.newParameterizedTypeWithOwner(null, Map.class, String.class, call.getReturnType().getType());
+        return gson.fromJson(wrapper.getResult().get(0), type);
     }
 
     public <R> R callSync(final WheelCall<R> call) throws SaltStackException {
@@ -434,6 +436,7 @@ public class SaltStackClient {
             throws SaltStackException {
         Result<List<JsonElement>> wrapper = call(call, Client.RUNNER, "/", null,
                 new TypeToken<Result<List<JsonElement>>>(){});
+        System.out.println(call.getReturnType().getType());
         return gson.fromJson(wrapper.getResult().get(0), call.getReturnType().getType());
     }
 
@@ -449,7 +452,8 @@ public class SaltStackClient {
         Result<List<JsonElement>> wrapper = call(call, Client.LOCAL, "/run", props,
                 new TypeToken<Result<List<JsonElement>>>() {});
         JsonElement inner = wrapper.getResult().get(0);
-        return gson.fromJson(inner, call.getReturnType().getType());
+        Type type = com.google.gson.internal.$Gson$Types.newParameterizedTypeWithOwner(null, Map.class, String.class, call.getReturnType().getType());
+        return gson.fromJson(inner, type);
     }
 
     private <R> R call(Call<?> call, Client client, String endpoint, Map<String,
@@ -518,8 +522,11 @@ public class SaltStackClient {
                         config)
                 .getResult(payload);
 
-        return gson.fromJson(result.getResult().get(0),
-                new TypeToken<LocalAsyncResult<R>>(){}.getType());
+        LocalAsyncResult<R> r = gson.fromJson(result.getResult().get(0),
+                new TypeToken<LocalAsyncResult<R>>() {
+                }.getType());
+        r.setType(call.getReturnType());
+        return r;
     }
 
     public <R> WheelAsyncResult<R> callAsync(final RunnerCall<R> call)
@@ -539,8 +546,10 @@ public class SaltStackClient {
                         config)
                 .getResult(payload);
 
-        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
+        WheelAsyncResult<R> r = gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
         }.getType());
+        r.setType(call.getReturnType());
+        return r;
     }
 
     public <R> WheelAsyncResult<R> callAsync(final WheelCall<R> call)
@@ -560,8 +569,10 @@ public class SaltStackClient {
                         config)
                 .getResult(payload);
 
-        return gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
+        WheelAsyncResult<R> r = gson.fromJson(wrapper.getResult().get(0), new TypeToken<WheelAsyncResult>() {
         }.getType());
+        r.setType(call.getReturnType());
+        return r;
     }
 
 

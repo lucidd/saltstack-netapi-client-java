@@ -13,7 +13,7 @@ public class WheelResult<R> {
      * Data field of a WheelResult
      * @param <R> the return type of the called function
      */
-    public class Data<R> {
+    public static class Data<R> {
 
         private String jid;
         @SerializedName("return")

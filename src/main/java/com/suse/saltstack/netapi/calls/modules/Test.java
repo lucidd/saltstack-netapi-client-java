@@ -3,7 +3,6 @@ package com.suse.saltstack.netapi.calls.modules;
 import com.google.gson.reflect.TypeToken;
 import com.suse.saltstack.netapi.calls.LocalCall;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -11,11 +10,11 @@ import java.util.Optional;
  */
 public class Test {
 
-    private static final LocalCall<Map<String, Boolean>> PING =
+    private static final LocalCall<Boolean> PING =
             new LocalCall<>("test.ping", Optional.empty(), Optional.empty(),
-            new TypeToken<Map<String, Boolean>>(){});
+            new TypeToken<Boolean>(){});
 
-    public static LocalCall<Map<String, Boolean>> ping() {
+    public static LocalCall<Boolean> ping() {
         return PING;
     }
 }

@@ -13,17 +13,25 @@ import java.util.Optional;
  */
 public class Key {
 
+    public static class Minions {
+        private Map<String, String> minions;
+
+        public Map<String, String> getMinions() {
+            return minions;
+        }
+    }
+
     private Key() {
     }
 
     private static final WheelCall<Keys> LIST_ALL =
             new WheelCall<>("key.list_all", Optional.empty(), new TypeToken<Keys>(){});
 
-    public static WheelCall<Map<String, Object>> finger(String match) {
+    public static WheelCall<Minions> finger(String match) {
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("match", match);
         return new WheelCall<>("key.finger", Optional.of(args),
-                new TypeToken<Map<String, Object>>(){});
+                new TypeToken<Minions>(){});
     }
 
 

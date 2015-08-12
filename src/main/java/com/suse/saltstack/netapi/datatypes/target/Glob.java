@@ -4,6 +4,8 @@ package com.suse.saltstack.netapi.datatypes.target;
  * Target for specifying minions by glob pattern.
  */
 public class Glob implements Target<String> {
+    
+    public static final Glob ALL = new Glob("*");
 
     private final String glob;
 
