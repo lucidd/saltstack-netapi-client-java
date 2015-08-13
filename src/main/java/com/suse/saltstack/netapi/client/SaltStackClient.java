@@ -399,13 +399,8 @@ public class SaltStackClient {
         props.put("fun", function);
         props.put("arg", args);
         props.put("kwarg", kwargs);
-
         List<Map<String, Object>> list =  Collections.singletonList(props);
-
         String payload = gson.toJson(list);
-        
-        System.out.println("Payload: " + payload);
-
         Result<List<Map<String, Object>>> result = connectionFactory
                 .create("/run", JsonParser.RETVALS, config)
                 .getResult(payload);
