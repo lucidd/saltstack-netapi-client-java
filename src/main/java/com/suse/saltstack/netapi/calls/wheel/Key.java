@@ -13,6 +13,9 @@ import java.util.Optional;
  */
 public class Key {
 
+    /**
+     *
+     */
     public static class Minions {
         private Map<String, String> minions;
 
